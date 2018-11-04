@@ -1,0 +1,39 @@
+version: "3"
+services:
+
+  registry-web:
+    restart: always
+    image: parabuzzle/craneoperator:2.2.5
+    container_name: registry-web
+    ports:
+      - 5001:80
+    depends_on:
+      - registry
+    environment:
+      REGISTRY_HOST: <http://your-domain.com>
+      REGISTRY_PORT: 5000
+      REGISTRY_USERNAME: <set_by_yourself>
+      REGISTRY_PASSWORD: <set_by_yourself>
+      REGISTRY_PROTOCOL: https
+      SSL_VERIFY: "true"
+      ALLOW_REGISTRY_LOGI: "true"
+      REGISTRY_ALLOW_DELETE: "true"
+
+  registry:
+    restart: always
+    image: registry:2.6.2
+    container_name: registry
+    ports:
+      - 5000:5000
+    environment:
+      REGISTRY_HTTP_TLS_CERTIFICATE: /certs/domain.crt
+      REGISTRY_HTTP_TLS_KEY: /certs/domain.key
+      REGISTRY_AUTH: htpasswd
+      REGISTRY_AUTH_HTPASSWD_PATH: /auth/htpasswd
+      REGISTRY_AUTH_HTPASSWD_REALM: Registry Realm
+      REGISTRY_STORAGE_DELETE_ENABLED: "true"
+
+    volumes:
+      - ./data:/var/lib/registry
+      - ./certs:/certs
+      - ./auth:/auth

@@ -1,0 +1,39 @@
+version: '3'
+
+services:
+  drone-server:
+    image: drone/drone:0.8.6
+    container_name: drone-server
+    ports:
+      - 8000:8000
+      - 9000:9000
+    volumes:
+      - ./bitbucket/key.pem:/home/drone/bitbucket/key.pem         # 需自己配置
+      - ./drone-server-data:/var/lib/drone                        # 需自己配置
+    restart: always
+    environment:
+      - DRONE_OPEN=true
+      - DRONE_HOST=<http://your-domain.com>                       # 需自己配置
+      - DRONE_STASH=true
+      - DRONE_STASH_GIT_USERNAME=<set_by_yourself>                # 需自己配置
+      - DRONE_STASH_GIT_PASSWORD=<set_by_yourself>                # 需自己配置
+      - DRONE_STASH_CONSUMER_KEY=<set_by_yourself>                # 需自己配置(注意：和设置 Bitbucket Server's Application Links 时的 Consumer Key 字段一致)
+      - DRONE_STASH_CONSUMER_RSA=/home/drone/bitbucket/key.pem    # 需自己配置
+      - DRONE_STASH_URL=http://<bitbucket_host>:7990              # 需自己配置
+      - DRONE_SECRET=<set_by_yourself>                            # 需自己配置(注意：drone-server & drone-agent 需一致)
+
+  drone-agent:
+    image: drone/agent:0.8.6
+    container_name: drone-agent
+    command: agent
+    restart: always
+    depends_on:
+      - drone-server
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - DRONE_SERVER=drone-server:9000
+      - DRONE_SECRET=<set_by_yourself>                            # 需自己配置(注意：drone-server & drone-agent 需一致)
+
+volumes:
+  drone-server-data:
